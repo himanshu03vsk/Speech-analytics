@@ -1,0 +1,13 @@
+,filename,duration,transcript,confidence,age,gender,accent,mos_pred,noi_pred,dis_pred,col_pred,loud_pred,model
+0,OutboundSampleRecording_0_2,22, I am her  to make yo,-3.7892344,0,0,0,2.5812926,1.5217376,4.3430185,3.5848696,3.7647953,NISQAv2
+1,OutboundSampleRecording_0_1,6,Hello tre,-3.312909603,0,0,0,1.80959,1.8759105,3.8330576,3.2877245,2.8159919,NISQAv2
+2,OutboundSampleRecording_0_2,6, my love,-3.312909603,0,0,0,1.7429105,1.8922127,3.259427,2.2510219,2.9626932,NISQAv2
+3,OutboundSampleRecording_0_4,22,then I qwill carry ea,-3.7892344,0,0,0,2.635692,1.9207474,3.9867928,3.0925353,3.4417312,NISQAv2
+4,OutboundSampleRecording_0_1,5,see the ocean ovwer there,-15.19332504,0,0,0,2.0085075,1.9561405,3.775151,3.1381667,2.895992,NISQAv2
+5,OutboundSampleRecording_0_5,22,ch of you to the back,-3.7892344,0,0,0,2.1895933,2.06431,3.8077488,3.0115595,3.0096927,NISQAv2
+6,OutboundSampleRecording_0_1,4,I am going to the movies do you want to go ,-6.178955555,0,0,0,2.0584753,2.106824,3.5242503,2.7708242,3.1043196,NISQAv2
+7,OutboundSampleRecording_0_1,12,I am going to t,-3.7892344,0,0,0,2.3617685,2.1560524,3.397645,3.0085778,3.2572303,NISQAv2
+8,OutboundSampleRecording_0_2,12,he movies do yo,-3.7892344,0,0,0,2.0161808,2.2400756,4.0088854,3.3450685,3.415656,NISQAv2
+9,OutboundSampleRecording_0_3,22,u my aquaintance and ,-3.7892344,0,0,0,2.4758916,2.2585576,3.6748838,3.071306,3.2600524,NISQAv2
+10,OutboundSampleRecording_0_3,12,u want to go ,-3.7892344,0,0,0,2.1727533,2.4262288,3.5901487,2.5440407,2.8358316,NISQAv2
+11,OutboundSampleRecording_0_1,22,Hello there my griend,-3.7892344,0,0,0,2.1076539,3.3491986,3.581555,3.0544493,2.949728,NISQAv2

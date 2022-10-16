@@ -1,0 +1,8 @@
+,Unnamed: 0,duration,filename,transcript,confidence,loudness,noisiness,coloration,discontinuity,age,gender,accent,mos_pred,noi_pred,dis_pred,col_pred,loud_pred,model
+0,0.0,12.0,OutboundSampleRecording_0,,-3.7892344,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,,,,,
+1,1.0,4.0,OutboundSampleRecording_1,,-6.178955555,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,,,,,
+2,2.0,6.0,OutboundSampleRecording_2,,-3.312909603,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,,,,,
+3,3.0,5.0,OutboundSampleRecording_3,,-15.19332504,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,,,,,
+4,,,OutboundSampleRecording_3_1,,,,,,,,,,2.635692,1.9207474,3.9867928,3.0925353,3.4417312,NISQAv2
+5,,,OutboundSampleRecording_3_2,,,,,,,,,,2.1895933,2.06431,3.8077488,3.0115595,3.0096927,NISQAv2
+6,,,OutboundSampleRecording_3_3,,,,,,,,,,2.0584753,2.106824,3.5242503,2.7708242,3.1043196,NISQAv2

@@ -1,0 +1,1 @@
+python run_predict.py --mode predict_file --pretrained_model weights/nisqa.tar --deg call1.wav --output_dir /
