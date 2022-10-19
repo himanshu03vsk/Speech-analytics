@@ -44,14 +44,14 @@ def transcribe_batch(audio_file, model):
     return sentence, confidence
 
 
-def init_model_stt():
+def init_model_stt(model_file, lm_file):
   from stt import Model
-  from deepspeech import Model as ds_model
-  model_file = 'model.tflite'
-  lm_file_path = "large_vocabulary.scorer"
+  # from deepspeech import Model as ds_model
+  model_file = model_file
+  lm_file_path = lm_file
   # ds_model_file = ""
-  ds_model_file = 'deepspeech-0.9.3-models.pbmm'
-  ds_lm_file_path = "deepspeech-0.9.3-models.scorer"
+  # ds_model_file = 'deepspeech-0.9.3-models.pbmm'
+  # ds_lm_file_path = "deepspeech-0.9.3-models.scorer"
   beam_width = 2000
   lm_alpha = 0.93
   lm_beta = 1.18
@@ -60,10 +60,11 @@ def init_model_stt():
   model.enableExternalScorer(lm_file_path)
   model.setScorerAlphaBeta(lm_alpha, lm_beta)
   model.setBeamWidth(beam_width)
-  ds_model = ds_model(ds_model_file)
-  ds_model.enableExternalScorer(ds_lm_file_path)
-  ds_model.setScorerAlphaBeta(lm_alpha, lm_beta)
-  ds_model.setBeamWidth(beam_width)
+  # ds_model = ds_model(ds_model_file)
+  # ds_model.enableExternalScorer(ds_lm_file_path)
+  # ds_model.setScorerAlphaBeta(lm_alpha, lm_beta)
+  # ds_model.setBeamWidth(beam_width)
+  ds_model = None
   print("Initialized the stt model successfully")
   return model, ds_model
 
@@ -129,6 +130,92 @@ def audio_splitter(ROOT, data_dir, audio_file_list, model, df):
         #! TODO
         #* Read the exported wav file and do the nisqa check
         #* Add logic of splitting the audios which are greater in length
+
+        df = df.append({"filename": filename[:-4]+ "_" + str(num) , "transcript": transcript , "confidence":confidence, "loudness":0, "noisiness":0, "coloration":0 , "discontinuity":0, "age":0, "gender":0, "accent":0}, ignore_index=True)
+        if num == 3:
+          break
+  return df
+
+
+
+
+
+
+'''Notes:
+Figure out way to do nisqa on >5sec samples
+'''
+
+        
+def audio_splitter(ROOT, data_dir, audio_file_list, model, df, output_dir):
+  '''
+  This function will basically contain all the parellel part that was modified in MIRO Board, It will:
+  1. Do the splitting
+  2. Do the Nisqa Assessment
+  3. Do the acoustic assessment
+  4. Do the Vocab assessment
+  ROOT: your cwd
+  data_dir: Directory of audio calls
+  '''
+  from pydub import AudioSegment #To read the WAV files
+  import glob #Kind of a regex to find any type of extension files in a folder
+  from pydub.utils import make_chunks #To make equal chunks of audio
+  args = {"mode": "predict_file", "deg": "", "pretrained_model":r"C:\Users\himan\Documents\Speech\nisqa\NISQA\weights\nisqa.tar","output_dir":None, "ms_channel":None}
+
+  timing_dir = os.path.join(ROOT,'Timings')  #This specifies where to look for the timing file of the particular audio
+  timings_list = glob.glob(f"{timing_dir}/*.txt")  #Find all the txt files in the foldr
+  data_list = os.listdir(data_dir)  #Get the audio calls present in the directory
+  data_list = [x for x in data_list if x!= ".ipynb_checkpoints"]   
+  # Init the nisqa model here
+  from nisqa.NISQA.nisqa.NISQA_model import nisqaModel
+  model = nisqaModel(args)
+
+
+  for timing, audio, filename in zip(sorted(timings_list), sorted(audio_file_list), sorted(data_list)):   #This is the main loop and will do all the task mentioned in the docstring
+    # if filename==".ipynb_checkpoints":
+    #   continue
+    with open(f"{timing}") as f: #Read the timing file
+      audio_file = AudioSegment.from_file(audio)
+      export_path = os.path.join(ROOT,"splitted_audio") #make splitted auido folder
+      for num, line in enumerate(f):
+        time = line.split(" ")
+        start = float(time[0])
+        end = float(time[1])
+        sliced_audio = audio_file[start*1000: end*1000] 
+        if sliced_audio.duration_seconds > 5.0: #Make chunks
+          chunks = make_chunks(sliced_audio, 5000)
+          for i, chunk in enumerate(chunks):
+                # print(big_chunk[:-4])
+                # chunk_name = "{1}_{0}.wav".format(i, big_chunk[:-4])
+            chunk_name = "{1}_{0}.wav".format(i, audio[:-4])
+                # print(audio_dir)
+                # print(chunk_name)
+            print("exporting", chunk_name)
+            exp_file = chunk.export(os.path.join(output_dir, chunk_name), format="wav")
+            args["deg"] = exp_file
+            #? For now I am taking only noise values but will make container for different parameters as well
+            # DO NISQA assessment on splitted audio file
+            nisqa_params = model.predict(args).noi_pred.values[0]
+            transcript, confidence = transcribe_batch(exp_file, model=model)
+
+            #TODO PESQ CODE HERE
+            #TODO BIAS CODE HERE
+
+
+          
+
+
+            # os.remove(big_chunk)
+
+
+          
+
+        export_name = export_path + os.sep + filename[:-4]+ "_" + str(num)
+        transcript, confidence = transcribe_batch(sliced_audio.export(f"{export_name}.wav", format="wav"), model=model) #This splits and saves the audio file and saves it to directory and get the transcription
+
+        #! TODO
+        #* Read the exported wav file and do the nisqa check
+        #* Add logic of splitting the audios which are greater in length
+        
         df = df.append({"filename": filename[:-4]+ "_" + str(num) , "transcript": transcript , "confidence":confidence, "loudness":0, "noisiness":0, "coloration":0 , "discontinuity":0, "age":0, "gender":0, "accent":0}, ignore_index=True)
         if num == 3:
           break
@@ -143,4 +230,5 @@ def audio_splitter(ROOT, data_dir, audio_file_list, model, df):
 
 
 
-
+#  This argument list must be passed from the notebook.
+{"mode": "predict_file", "pretrained_model":r"C:\Users\himan\Documents\Speech\nisqa\NISQA\weights\nisqa.tar","output_dir":None, "ms_channel":None}
