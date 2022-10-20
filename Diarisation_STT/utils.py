@@ -152,7 +152,9 @@ def audio_splitter(ROOT, data_dir, audio_file_list, model, df, output_dir):
   1. Do the splitting
   2. Do the Nisqa Assessment
   3. Do the acoustic assessment
-  4. Do the Vocab assessment
+  4. Noise Classification
+  5. Do the Vocab assessment
+  6. Bias Detection
   ROOT: your cwd
   data_dir: Directory of audio calls
   '''
@@ -167,51 +169,71 @@ def audio_splitter(ROOT, data_dir, audio_file_list, model, df, output_dir):
   data_list = [x for x in data_list if x!= ".ipynb_checkpoints"]   
   # Init the nisqa model here
   from nisqa.NISQA.nisqa.NISQA_model import nisqaModel
-  model = nisqaModel(args)
+ 
 
 
   for timing, audio, filename in zip(sorted(timings_list), sorted(audio_file_list), sorted(data_list)):   #This is the main loop and will do all the task mentioned in the docstring
     # if filename==".ipynb_checkpoints":
     #   continue
     with open(f"{timing}") as f: #Read the timing file
+
       audio_file = AudioSegment.from_file(audio)
       export_path = os.path.join(ROOT,"splitted_audio") #make splitted auido folder
+
       for num, line in enumerate(f):
+
         time = line.split(" ")
         start = float(time[0])
         end = float(time[1])
-        sliced_audio = audio_file[start*1000: end*1000] 
+        sliced_audio = audio_file[start*1000: end*1000]
+        slice_audio_name = "{1}_{0}.wav".format(num, audio[:-4]) 
+
         if sliced_audio.duration_seconds > 5.0: #Make chunks
           chunks = make_chunks(sliced_audio, 5000)
+
           for i, chunk in enumerate(chunks):
                 # print(big_chunk[:-4])
                 # chunk_name = "{1}_{0}.wav".format(i, big_chunk[:-4])
-            chunk_name = "{1}_{0}.wav".format(i, audio[:-4])
+            chunk_name = f"{1}_{0}.wav".format(i, slice_audio_name.split(".")[0])
                 # print(audio_dir)
                 # print(chunk_name)
+
+
             print("exporting", chunk_name)
             exp_file = chunk.export(os.path.join(output_dir, chunk_name), format="wav")
             args["deg"] = exp_file
+
+
             #? For now I am taking only noise values but will make container for different parameters as well
             # DO NISQA assessment on splitted audio file
-            nisqa_params = model.predict(args).noi_pred.values[0]
+            model = nisqaModel(args)
+            nisqa_params = model.predict().noi_pred.values[0]
             transcript, confidence = transcribe_batch(exp_file, model=model)
 
             #TODO PESQ CODE HERE
+            
+
             #TODO BIAS CODE HERE
 
+            #TODO ADD the parameters into a dataframe so we can get info about these audio files
 
           
 
 
-            # os.remove(big_chunk)
+        else:
+          exp_file = sliced_audio.export(os.path.join(output_dir, slice_audio_name), format="wav")
+          args["deg"] = exp_file
+          model = nisqaModel(args)
+          nisqa_params = model.predict().noi_pred.values[0]
+          transcript, confidence = transcribe_batch(exp_file, model=model)
 
+          #TODO PESQ CODE HERE
+
+
+          #TODO BIAS CODE HERE
 
           
-
-        export_name = export_path + os.sep + filename[:-4]+ "_" + str(num)
-        transcript, confidence = transcribe_batch(sliced_audio.export(f"{export_name}.wav", format="wav"), model=model) #This splits and saves the audio file and saves it to directory and get the transcription
-
+          #TODO ADD the parameters into a dataframe so we can get info about these audio files          
         #! TODO
         #* Read the exported wav file and do the nisqa check
         #* Add logic of splitting the audios which are greater in length
