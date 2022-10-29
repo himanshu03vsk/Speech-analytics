@@ -1,0 +1,6 @@
+{
+    "prettier.configPath": "C:\\Users\\himan\\Documents\\Speech\\Diarisation_STT\\.prettierrc",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
+}

@@ -165,7 +165,7 @@ Figure out way to do nisqa on >5sec samples
 """
 
 
-def audio_splitter(ROOT, data_dir, audio_file_list, model, df, output_dir):
+def audio_splitter(ROOT, data_dir, audio_file_list, model, df, output_dir, noise_model_path, noise_model_name):
     """
     This function will basically contain all the parellel part that was modified in MIRO Board, It will:
     1. Do the splitting
@@ -180,7 +180,6 @@ def audio_splitter(ROOT, data_dir, audio_file_list, model, df, output_dir):
     from pydub import AudioSegment  # To read the WAV files
     import glob  # Kind of a regex to find any type of extension files in a folder
     from pydub.utils import make_chunks  # To make equal chunks of audio
-
     args = {
         "mode": "predict_file",
         "deg": "",
@@ -237,7 +236,12 @@ def audio_splitter(ROOT, data_dir, audio_file_list, model, df, output_dir):
                             os.path.join(output_dir, chunk_name), format="wav"
                         )
                         args["deg"] = exp_file
-
+                        # TODO Use noise identification module here
+                        
+                        # TODO Use the audio file and supress the noise and either make a new directory or replace the file
+                        clean_audio = prediction(noise_model_path, noise_model_name, output_dir, clean_voice_folder, "audio_file_to_denoise",
+                                      'denoised_audio_file', sample_rate, 1.0, 8064, 8064,
+                                      255, 63)
                         # ? For now I am taking only noise values but will make container for different parameters as well
                         # DO NISQA assessment on splitted audio file
                         model = nisqaModel(args)
