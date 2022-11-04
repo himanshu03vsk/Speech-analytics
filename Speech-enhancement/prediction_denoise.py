@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow.keras.models import model_from_json
 from data_tools import scaled_in, inv_scaled_ou
 from data_tools import audio_files_to_numpy, numpy_audio_to_matrix_spectrogram, matrix_spectrogram_to_numpy_audio
-
+import soundfile as sf
 
 def prediction(weights_path, name_model, audio_dir_prediction, dir_save_prediction, audio_input_prediction,
 audio_output_prediction, sample_rate, min_duration, frame_length, hop_length_frame, n_fft, hop_length_fft):
@@ -52,4 +52,6 @@ audio_output_prediction, sample_rate, min_duration, frame_length, hop_length_fra
     nb_samples = audio_denoise_recons.shape[0]
     #Save all frames in one file
     denoise_long = audio_denoise_recons.reshape(1, nb_samples * frame_length)*10
-    librosa.output.write_wav(dir_save_prediction + audio_output_prediction, denoise_long[0, :], sample_rate)
+    # librosa.output.write_wav(dir_save_prediction + audio_output_prediction, denoise_long[0, :], sample_rate)
+    # librosa.output.write_wav(dir_save_prediction + os.sep + "clean" + audio_output_prediction, denoise_long[0, :], sample_rate)
+    sf.write(dir_save_prediction+ os.sep + "clean" + audio_output_prediction, denoise_long[0, :], sample_rate)
