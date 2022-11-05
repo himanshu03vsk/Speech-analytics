@@ -1,5 +1,4 @@
 pydub
-coqui-stt-model-manager
 wget
 torch==1.11.0
 torchvision==0.12.0
