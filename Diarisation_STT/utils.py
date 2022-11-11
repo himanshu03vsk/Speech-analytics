@@ -68,7 +68,7 @@ def init_model_stt(model_file, lm_file):
     # ds_model.setBeamWidth(beam_width)
     ds_model = None
     print("Initialized the stt model successfully")
-    return model, ds_model
+    return model
 
 
 def init_diarize_pipline():
@@ -108,56 +108,56 @@ def diarize(audio_file_list, pipeline, output_dir):
                 f.writelines((f"{turn.start:.1f} {turn.end:.1f} {speaker}\n"))
 
 
-def audio_splitter(ROOT, data_dir, audio_file_list, model, df):
-    from pydub import AudioSegment
-    import glob
+# def audio_splitter(ROOT, data_dir, audio_file_list, model, df):
+#     from pydub import AudioSegment
+#     import glob
 
-    timing_dir = os.path.join(ROOT, "Timings")
-    timings_list = glob.glob(f"{timing_dir}/*.txt")
-    data_list = os.listdir(data_dir)
-    data_list = [x for x in data_list if x != ".ipynb_checkpoints"]
-    for timing, audio, filename in zip(
-        sorted(timings_list), sorted(audio_file_list), sorted(data_list)
-    ):
-        if filename == ".ipynb_checkpoints":
-            continue
-        with open(f"{timing}") as f:
-            audio_file = AudioSegment.from_file(audio)
-            export_path = os.path.join(
-                ROOT, "splitted_audio"
-            )  # make splitted auido folder
-            for num, line in enumerate(f):
-                time = line.split(" ")
-                start = float(time[0])
-                end = float(time[1])
-                sliced_audio = audio_file[start * 1000 : end * 1000]
-                export_name = export_path + os.sep + filename[:-4] + "_" + str(num)
-                transcript, confidence = transcribe_batch(
-                    sliced_audio.export(f"{export_name}.wav", format="wav"), model=model
-                )  # This splits and saves the audio file and saves it to directory and get the transcription
+#     timing_dir = os.path.join(ROOT, "Timings")
+#     timings_list = glob.glob(f"{timing_dir}/*.txt")
+#     data_list = os.listdir(data_dir)
+#     data_list = [x for x in data_list if x != ".ipynb_checkpoints"]
+#     for timing, audio, filename in zip(
+#         sorted(timings_list), sorted(audio_file_list), sorted(data_list)
+#     ):
+#         if filename == ".ipynb_checkpoints":
+#             continue
+#         with open(f"{timing}") as f:
+#             audio_file = AudioSegment.from_file(audio)
+#             export_path = os.path.join(
+#                 ROOT, "splitted_audio"
+#             )  # make splitted auido folder
+#             for num, line in enumerate(f):
+#                 time = line.split(" ")
+#                 start = float(time[0])
+#                 end = float(time[1])
+#                 sliced_audio = audio_file[start * 1000 : end * 1000]
+#                 export_name = export_path + os.sep + filename[:-4] + "_" + str(num)
+#                 transcript, confidence = transcribe_batch(
+#                     sliced_audio.export(f"{export_name}.wav", format="wav"), model=model
+#                 )  # This splits and saves the audio file and saves it to directory and get the transcription
 
-                #! TODO
-                # * Read the exported wav file and do the nisqa check
-                # * Add logic of splitting the audios which are greater in length
+#                 #! TODO
+#                 # * Read the exported wav file and do the nisqa check
+#                 # * Add logic of splitting the audios which are greater in length
 
-                df = df.append(
-                    {
-                        "filename": filename[:-4] + "_" + str(num),
-                        "transcript": transcript,
-                        "confidence": confidence,
-                        "loudness": 0,
-                        "noisiness": 0,
-                        "coloration": 0,
-                        "discontinuity": 0,
-                        "age": 0,
-                        "gender": 0,
-                        "accent": 0,
-                    },
-                    ignore_index=True,
-                )
-                if num == 3:
-                    break
-    return df
+#                 df = df.append(
+#                     {
+#                         "filename": filename[:-4] + "_" + str(num),
+#                         "transcript": transcript,
+#                         "confidence": confidence,
+#                         "loudness": 0,
+#                         "noisiness": 0,
+#                         "coloration": 0,
+#                         "discontinuity": 0,
+#                         "age": 0,
+#                         "gender": 0,
+#                         "accent": 0,
+#                     },
+#                     ignore_index=True,
+#                 )
+#                 if num == 3:
+#                     break
+#     return df
 
 
 """Notes:
@@ -171,7 +171,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 import warnings
 
-from utils import create_folder, dump_config, process_idc
+from HTS-Audio-Transformer import create_folder, dump_config, process_idc
 import esc_config as config
 from sed_model import SEDWrapper, Ensemble_SEDWrapper
 from data_generator import ESC_Dataset
