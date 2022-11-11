@@ -54,4 +54,4 @@ audio_output_prediction, sample_rate, min_duration, frame_length, hop_length_fra
     denoise_long = audio_denoise_recons.reshape(1, nb_samples * frame_length)*10
     # librosa.output.write_wav(dir_save_prediction + audio_output_prediction, denoise_long[0, :], sample_rate)
     # librosa.output.write_wav(dir_save_prediction + os.sep + "clean" + audio_output_prediction, denoise_long[0, :], sample_rate)
-    sf.write(dir_save_prediction+ os.sep + "clean" + audio_output_prediction, denoise_long[0, :], sample_rate)
+    sf.write(dir_save_prediction+ os.sep + "clean_" + audio_output_prediction, denoise_long[0, :], sample_rate)

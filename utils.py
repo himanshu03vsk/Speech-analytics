@@ -108,61 +108,73 @@ def diarize(audio_file_list, pipeline, output_dir):
                 f.writelines((f"{turn.start:.1f} {turn.end:.1f} {speaker}\n"))
 
 
-def audio_splitter(ROOT, data_dir, audio_file_list, model, df):
-    from pydub import AudioSegment
-    import glob
+# def audio_splitter(ROOT, data_dir, audio_file_list, model, df):
+#     from pydub import AudioSegment
+#     import glob
 
-    timing_dir = os.path.join(ROOT, "Timings")
-    timings_list = glob.glob(f"{timing_dir}/*.txt")
-    data_list = os.listdir(data_dir)
-    data_list = [x for x in data_list if x != ".ipynb_checkpoints"]
-    for timing, audio, filename in zip(
-        sorted(timings_list), sorted(audio_file_list), sorted(data_list)
-    ):
-        if filename == ".ipynb_checkpoints":
-            continue
-        with open(f"{timing}") as f:
-            audio_file = AudioSegment.from_file(audio)
-            export_path = os.path.join(
-                ROOT, "splitted_audio"
-            )  # make splitted auido folder
-            for num, line in enumerate(f):
-                time = line.split(" ")
-                start = float(time[0])
-                end = float(time[1])
-                sliced_audio = audio_file[start * 1000 : end * 1000]
-                export_name = export_path + os.sep + filename[:-4] + "_" + str(num)
-                transcript, confidence = transcribe_batch(
-                    sliced_audio.export(f"{export_name}.wav", format="wav"), model=model
-                )  # This splits and saves the audio file and saves it to directory and get the transcription
+#     timing_dir = os.path.join(ROOT, "Timings")
+#     timings_list = glob.glob(f"{timing_dir}/*.txt")
+#     data_list = os.listdir(data_dir)
+#     data_list = [x for x in data_list if x != ".ipynb_checkpoints"]
+#     for timing, audio, filename in zip(
+#         sorted(timings_list), sorted(audio_file_list), sorted(data_list)
+#     ):
+#         if filename == ".ipynb_checkpoints":
+#             continue
+#         with open(f"{timing}") as f:
+#             audio_file = AudioSegment.from_file(audio)
+#             export_path = os.path.join(
+#                 ROOT, "splitted_audio"
+#             )  # make splitted auido folder
+#             for num, line in enumerate(f):
+#                 time = line.split(" ")
+#                 start = float(time[0])
+#                 end = float(time[1])
+#                 sliced_audio = audio_file[start * 1000 : end * 1000]
+#                 export_name = export_path + os.sep + filename[:-4] + "_" + str(num)
+#                 transcript, confidence = transcribe_batch(
+#                     sliced_audio.export(f"{export_name}.wav", format="wav"), model=model
+#                 )  # This splits and saves the audio file and saves it to directory and get the transcription
 
-                #! TODO
-                # * Read the exported wav file and do the nisqa check
-                # * Add logic of splitting the audios which are greater in length
+#                 #! TODO
+#                 # * Read the exported wav file and do the nisqa check
+#                 # * Add logic of splitting the audios which are greater in length
 
-                df = df.append(
-                    {
-                        "filename": filename[:-4] + "_" + str(num),
-                        "transcript": transcript,
-                        "confidence": confidence,
-                        "loudness": 0,
-                        "noisiness": 0,
-                        "coloration": 0,
-                        "discontinuity": 0,
-                        "age": 0,
-                        "gender": 0,
-                        "accent": 0,
-                    },
-                    ignore_index=True,
-                )
-                if num == 3:
-                    break
-    return df
+#                 df = df.append(
+#                     {
+#                         "filename": filename[:-4] + "_" + str(num),
+#                         "transcript": transcript,
+#                         "confidence": confidence,
+#                         "loudness": 0,
+#                         "noisiness": 0,
+#                         "coloration": 0,
+#                         "discontinuity": 0,
+#                         "age": 0,
+#                         "gender": 0,
+#                         "accent": 0,
+#                     },
+#                     ignore_index=True,
+#                 )
+#                 if num == 3:
+#                     break
+#     return df
 
 
 """Notes:
 Figure out way to do nisqa on >5sec samples
 """
+
+# import basic packages
+import os
+import numpy as np
+import wget
+import sys
+# import gdown
+import zipfile
+import librosa
+# in the notebook, we only can use one GPU
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 # Load the model package
 import torch
 from torch.utils.data import DataLoader
@@ -171,6 +183,8 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 import warnings
 
+
+# These imports are for HTS_Noise_classification library, do the changes accordingly
 from utils import create_folder, dump_config, process_idc
 import esc_config as config
 from sed_model import SEDWrapper, Ensemble_SEDWrapper
@@ -312,21 +326,23 @@ def audio_splitter(ROOT, data_dir, audio_file_list, timing_dir, splitted_audio_d
                         # )
 
                         args["deg"] = exp_file
+                        model = nisqaModel(args)
+                        nisqa_params = model.predict().noi_pred.values[0]
 
                         #Do we have to use the nisqa and check if it has certain threshold and make it do noise classification
 
                         # TODO Use noise identification module here
                         pred_label, pred_prob = noise_classification_model.predict(exp_file)   #make a mapping of labels to noise names
                         # TODO Use the audio file and supress the noise and either make a new directory or replace the file
-                        
+                        # Use the predicted type of noise and add it to dataframe
+                        #We can only do noise calssification if the audio exceeds certain level of threshold value which needs to be set
+
                         prediction_denoise.prediction(noise_model_path, noise_model_name, splitted_audio_dir, splitted_audio_dir, chunk_name,
                                       chunk_name , 8000, 1.0, 8064, 8064,
                                       255, 63)
-                        clean_audio = splitted_audio_dir+ os.sep + "clean" + chunk_name
+                        clean_audio = splitted_audio_dir+ os.sep + "clean_" + chunk_name
                         # ? For now I am taking only noise values but will make container for different parameters as well
                         # DO NISQA assessment on splitted audio file
-                        model = nisqaModel(args)
-                        nisqa_params = model.predict().noi_pred.values[0]
                         transcript, confidence = transcribe_batch(exp_file, model=model) #transcribe before denoise
 
                         transcript, confidence = transcribe_batch(clean_audio, model=model) #transcribe after denoise
@@ -343,6 +359,14 @@ def audio_splitter(ROOT, data_dir, audio_file_list, timing_dir, splitted_audio_d
                     args["deg"] = exp_file
                     model = nisqaModel(args)
                     nisqa_params = model.predict().noi_pred.values[0]
+                    pred_label, pred_prob = noise_classification_model.predict(exp_file)   #make a mapping of labels to noise names
+                    # TODO Use the audio file and supress the noise and either make a new directory or replace the file
+                    # Use the predicted type of noise and add it to dataframe
+                    #We can only do noise calssification if the audio exceeds certain level of threshold value which needs to be set
+                    prediction_denoise.prediction(noise_model_path, noise_model_name, splitted_audio_dir, splitted_audio_dir, chunk_name,
+                                                  chunk_name , 8000, 1.0, 8064, 8064,
+                                                  255, 63)
+                    clean_audio = splitted_audio_dir+ os.sep + "clean_" + chunk_name
                     transcript, confidence = transcribe_batch(exp_file, model=model)
 
                     # TODO PESQ CODE HERE
@@ -350,10 +374,7 @@ def audio_splitter(ROOT, data_dir, audio_file_list, timing_dir, splitted_audio_d
                     # TODO BIAS CODE HERE
 
                     # TODO ADD the parameters into a dataframe so we can get info about these audio files
-                #! TODO
-                # * Read the exported wav file and do the nisqa check
-                # * Add logic of splitting the audios which are greater in length
-
+                #How do we make the transcription divide themeselves if we encounter chunks >5s
                 df = df.append(
                     {
                         "filename": filename[:-4] + "_" + str(num),
@@ -367,7 +388,7 @@ def audio_splitter(ROOT, data_dir, audio_file_list, timing_dir, splitted_audio_d
                         "gender": 0,
                         "accent": 0,
                         "noise": pred_label,
-                        "n_confidenct": pred_prob
+                        "n_confidence": pred_prob,
                     },
                     ignore_index=True,
                 )
