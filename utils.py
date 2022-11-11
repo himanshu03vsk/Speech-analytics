@@ -185,12 +185,12 @@ import warnings
 
 
 # These imports are for HTS_Noise_classification library, do the changes accordingly
-from utils import create_folder, dump_config, process_idc
-import esc_config as config
-from sed_model import SEDWrapper, Ensemble_SEDWrapper
-from data_generator import ESC_Dataset
-from model.htsat import HTSAT_Swin_Transformer
-import prediction_denoise
+# from utils import create_folder, dump_config, process_idc
+import noise_identification.esc_config as config
+from noise_identification.sed_model import SEDWrapper, Ensemble_SEDWrapper
+from noise_identification.data_generator import ESC_Dataset
+from noise_identification.model.htsat import HTSAT_Swin_Transformer
+
 
 
 #This class must be initialized in the notebook to use it for noise classification
@@ -261,6 +261,7 @@ def audio_splitter(ROOT, data_dir, audio_file_list, timing_dir, splitted_audio_d
     from pydub import AudioSegment  # To read the WAV files
     import glob  # Kind of a regex to find any type of extension files in a folder
     from pydub.utils import make_chunks  # To make equal chunks of audio
+    from noise_suppression.prediction_denoise import prediction
     args = {
         "mode": "predict_file",
         "deg": "",
@@ -337,13 +338,13 @@ def audio_splitter(ROOT, data_dir, audio_file_list, timing_dir, splitted_audio_d
                         # Use the predicted type of noise and add it to dataframe
                         #We can only do noise calssification if the audio exceeds certain level of threshold value which needs to be set
 
-                        prediction_denoise.prediction(noise_model_path, noise_model_name, splitted_audio_dir, splitted_audio_dir, chunk_name,
+                        prediction(noise_model_path, noise_model_name, splitted_audio_dir, splitted_audio_dir, chunk_name,
                                       chunk_name , 8000, 1.0, 8064, 8064,
                                       255, 63)
                         clean_audio = splitted_audio_dir+ os.sep + "clean_" + chunk_name
                         # ? For now I am taking only noise values but will make container for different parameters as well
                         # DO NISQA assessment on splitted audio file
-                        transcript, confidence = transcribe_batch(exp_file, model=model) #transcribe before denoise
+                        # transcript, confidence = transcribe_batch(exp_file, model=model) #transcribe before denoise
 
                         transcript, confidence = transcribe_batch(clean_audio, model=model) #transcribe after denoise
                         # TODO PESQ CODE HERE
@@ -363,7 +364,7 @@ def audio_splitter(ROOT, data_dir, audio_file_list, timing_dir, splitted_audio_d
                     # TODO Use the audio file and supress the noise and either make a new directory or replace the file
                     # Use the predicted type of noise and add it to dataframe
                     #We can only do noise calssification if the audio exceeds certain level of threshold value which needs to be set
-                    prediction_denoise.prediction(noise_model_path, noise_model_name, splitted_audio_dir, splitted_audio_dir, chunk_name,
+                    prediction(noise_model_path, noise_model_name, splitted_audio_dir, splitted_audio_dir, chunk_name,
                                                   chunk_name , 8000, 1.0, 8064, 8064,
                                                   255, 63)
                     clean_audio = splitted_audio_dir+ os.sep + "clean_" + chunk_name

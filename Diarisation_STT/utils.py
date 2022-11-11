@@ -171,7 +171,6 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 import warnings
 
-from HTS-Audio-Transformer import create_folder, dump_config, process_idc
 import esc_config as config
 from sed_model import SEDWrapper, Ensemble_SEDWrapper
 from data_generator import ESC_Dataset
