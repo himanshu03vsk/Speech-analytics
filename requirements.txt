@@ -1,0 +1,10 @@
+pyannote.audio
+h5py==3.6.0
+torchcontrib
+torchlibrosa
+wget
+notebook
+coqui-stt-model-manager
+ipywidgets
+museval
+ffmpeg
